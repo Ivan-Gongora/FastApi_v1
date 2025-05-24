@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.servicios.servicio_simulacion import simular_datos_csv
 from app.configuracion import configuracion
 
+from app.servicios.endpoints import router as valores_router
+
 aplicacion = FastAPI()
 
 origins = [
@@ -24,6 +26,8 @@ aplicacion.add_middleware(
 )
 
 aplicacion.mount("/web", StaticFiles(directory="web"), name="web")
+
+aplicacion.include_router(valores_router)
 
 @aplicacion.get("/", response_class=HTMLResponse)
 async def read_root():

@@ -7,7 +7,7 @@ class ConfiguracionSimulacion:
     db_host: str = "localhost" #si su xampp esta en windows y su entorno virtual en ubuntu , poner su ip de computadora
                                   # y modificar el usuario root de phpmyadmin quitarle el "localhost y ponerle el " %" "
                                   #si todo esta en windows, solo cambien esto por localhost
-    db_port: int = 3307
+    db_port: int = 3306
     db_user: str = "root" # Usuario por defecto de XAMPP MySQL
     db_password: str = "" # Contraseña por defecto de XAMPP MySQL (vacía por defecto en XAMPP)
     db_name: str = "sistema_iot" # El nombre de tu base de datos
