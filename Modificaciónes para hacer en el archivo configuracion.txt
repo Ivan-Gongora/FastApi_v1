@@ -1,0 +1,16 @@
+Modificación en el caso que no esten trabajando en Ubuntu y Windows al mimmo tiempo 
+
+1. Modificar el archivo configuración.py que esta dentro de la carpeta app
+
+2. Modificar los siguientes : 
+
+
+- db_host: str = "192.168.0.159" cambiarlo por db_host: str = "localhost"
+
+- db_port: int = 3307 cambiarlo por el puerto que les muestre el XAMPP al estar levantando el de "MySQL"
+
+- campo_temperatura_id: int = 2   ponerle al id del sensor llamado temperatura  
+
+- campo_humedad_id: int = 3 ponerle al id del sensor llamado humedad
+
+nota: hacer una inserción de prueba a las tablas o si quieren usar el que ya puse en la carpeta , el archivo se llama pruebas.sql, al final te va crear 3 sensores 

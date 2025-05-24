@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Sensores IoT</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input[type="file"], input[type="number"], button { /* Añadido input[type="number"] */
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover { background-color: #45a049; }
+        #log {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #eee;
+            background-color: #f9f9f9;
+            height: 200px;
+            overflow-y: scroll;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulador de Sensores IoT</h1>
+
+        <label for="csv_file">Seleccionar Archivo CSV:</label>
+        <input type="file" id="csv_file" accept=".csv">
+
+        <label for="proyecto_id">ID del Proyecto:</label>
+        <input type="number" id="proyecto_id" value="1" min="1" required>
+
+        <label for="dispositivo_id">ID del Dispositivo:</label>
+        <input type="number" id="dispositivo_id" value="1" min="1" required>
+
+        <button id="start_simulation_btn">Iniciar Simulación</button>
+
+        <h2>Log de Simulación:</h2>
+        <pre id="log"></pre>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const csvFileInput = document.getElementById('csv_file');
+            const startSimulationBtn = document.getElementById('start_simulation_btn');
+            const logElement = document.getElementById('log');
+            const proyectoIdInput = document.getElementById('proyecto_id'); // Nuevo
+            const dispositivoIdInput = document.getElementById('dispositivo_id'); // Nuevo
+
+            function logMessage(message, type = 'info') {
+                const p = document.createElement('p');
+                p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                p.classList.add(type);
+                logElement.appendChild(p);
+                logElement.scrollTop = logElement.scrollHeight;
+            }
+
+            startSimulationBtn.addEventListener('click', async () => {
+                logElement.innerHTML = '';
+                const csvFile = csvFileInput.files[0];
+                const proyectoId = proyectoIdInput.value; // Obtener valor
+                const dispositivoId = dispositivoIdInput.value; // Obtener valor
+
+                if (!csvFile) {
+                    logMessage('Por favor, selecciona un archivo CSV.', 'error');
+                    return;
+                }
+                if (!proyectoId || !dispositivoId) { // Validar que estén llenos
+                    logMessage('Por favor, ingresa el ID del Proyecto y del Dispositivo.', 'error');
+                    return;
+                }
+
+                logMessage('Iniciando simulación...');
+                logMessage(`Archivo seleccionado: ${csvFile.name}`);
+                logMessage(`ID Proyecto: ${proyectoId}, ID Dispositivo: ${dispositivoId}`); // Mostrar en log
+
+                const formData = new FormData();
+                formData.append('file', csvFile);
+                formData.append('proyecto_id', proyectoId); // Añadir al FormData
+                formData.append('dispositivo_id', dispositivoId); // Añadir al FormData
+
+                try {
+                    const fastapiEndpoint = 'http://127.0.0.1:8001/simular/';
+
+                    const response = await fetch(fastapiEndpoint, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        logMessage('Simulación completada con éxito:', 'success');
+                        logMessage(JSON.stringify(data, null, 2));
+                    } else {
+                        const errorData = await response.json();
+                        logMessage(`Error en la simulación: ${response.status} ${response.statusText}`, 'error');
+                        logMessage(`Detalle del error: ${JSON.stringify(errorData, null, 2)}`, 'error');
+                    }
+                } catch (error) {
+                    logMessage(`Error de red o CORS: ${error.message}. Asegúrate de que el servidor FastAPI está corriendo y la configuración CORS es correcta.`, 'error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

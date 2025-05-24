@@ -1,0 +1,18 @@
+En Windows
+
+1. entrar a la dirección de la carpeta donde vas a trabajar 
+
+2. crear el entorno virtual=  python -m venv venv
+
+3. activar el entorno virtual = .\venv\Scripts\actívate
+
+Nota: sino quieren usar entorno virtual omitan el paso 2 y 3 
+
+4. en la terminal poner el siguiente comando para instalar todo lo que necesita el proyecto= 
+ pip install fastapi uvicorn pymysql python-multipart
+
+5. entrar a la carpeta donde esta el proyecto en este caso la que se llama " FastApi_v1+ "
+
+6. dentro de la carpeta en la terminal correr el siguiente comando = 
+  uvicorn app.principal:aplicacion --reload --port 8001
+
