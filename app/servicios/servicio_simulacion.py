@@ -9,6 +9,8 @@ from app.configuracion import configuracion
 import pymysql
 import pymysql.cursors
 
+from app.api.modelos.simulacion import DatosSimulacion, DatoSensor  
+
 # Función para obtener una conexión a la base de datos
 def get_db_connection():
     return pymysql.connect(
@@ -96,6 +98,91 @@ async def simular_datos_csv(
                 conn.rollback()
                 print(f"Error inesperado en fila {i+1}: {e}")
                 procesado.append({"row_number": i+1, "status": "error", "message": f"Error inesperado: {e}"})
+
+    finally:
+        if conn:
+            conn.close()
+
+    return procesado
+
+#Simular datos a traves de json
+async def simular_datos_json(datos: DatosSimulacion) -> List[Dict[str, Any]]:
+    procesado = []
+    conn = None
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Validar proyecto
+        cursor.execute("SELECT id FROM proyectos WHERE nombre = %s", (datos.proyecto,))
+        proyecto_row = cursor.fetchone()
+        if not proyecto_row:
+            return [{
+                "status": "error",
+                "message": f"Proyecto '{datos.proyecto}' no existe"
+            }]
+        proyecto_id = proyecto_row["id"]
+
+        # Validar dispositivo relacionado al proyecto
+        cursor.execute("SELECT id FROM dispositivos WHERE nombre = %s AND proyecto_id = %s", (datos.dispositivo, proyecto_id))
+        dispositivo_row = cursor.fetchone()
+        if not dispositivo_row:
+            return [{
+                "status": "error",
+                "message": f"Dispositivo '{datos.dispositivo}' no existe en el proyecto '{datos.proyecto}'"
+            }]
+        dispositivo_id = dispositivo_row["id"]
+
+        # Obtener fecha y hora
+        fecha_str = datos.fecha or datetime.now().strftime("%d/%m/%Y")
+        hora_str = datos.hora or datetime.now().strftime("%H:%M:%S")
+        fecha_hora_lectura = datetime.strptime(f"{fecha_str} {hora_str}", "%d/%m/%Y %H:%M:%S")
+
+        # Procesar sensores
+        for sensor in datos.sensores:
+            for campo, valor in sensor.datos.items():
+                try:
+                    if campo.lower() == "temperatura":
+                        campo_id = configuracion.campo_temperatura_id
+                    elif campo.lower() == "humedad":
+                        campo_id = configuracion.campo_humedad_id
+                    else:
+                        raise ValueError(f"Campo desconocido: {campo}")
+
+                    sql = "INSERT INTO valores (valor, fecha_hora_lectura, campo_id) VALUES (%s, %s, %s)"
+                    cursor.execute(sql, (str(valor), fecha_hora_lectura, campo_id))
+                    conn.commit()
+
+                    procesado.append({
+                        "sensor": sensor.nombre,
+                        "campo": campo,
+                        "valor": valor,
+                        "fecha_hora_lectura": fecha_hora_lectura.isoformat(),
+                        "status": "success"
+                    })
+
+                except pymysql.Error as e:
+                    conn.rollback()
+                    print(f"Error de DB al insertar {campo} de {sensor.nombre}: {e}")
+                    procesado.append({
+                        "sensor": sensor.nombre,
+                        "campo": campo,
+                        "valor": valor,
+                        "status": "error",
+                        "message": f"Error DB: {e}"
+                    })
+
+                except Exception as e:
+                    conn.rollback()
+                    print(f"Error inesperado: {e}")
+                    procesado.append({
+                        "sensor": sensor.nombre,
+                        "campo": campo,
+                        "valor": valor,
+                        "status": "error",
+                        "message": f"Error: {e}"
+                    })
 
     finally:
         if conn:
