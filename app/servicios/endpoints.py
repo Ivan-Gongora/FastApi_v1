@@ -7,6 +7,7 @@ import pymysql
 
 from app.configuracion import configuracion
 from app.servicios.servicio_simulacion import get_db_connection, simular_datos_json
+from app.api.modelos.simulacionJson import DatosSimulacionJson
 
 
 from app.api.modelos.simulacion import DatosSimulacion
@@ -126,7 +127,7 @@ async def eliminar_valores(
 
 # Simular datos desde json
 @router.post("/simularDatos/")
-async def simular_datos(datos: DatosSimulacion):
+async def simular_datos(datos: DatosSimulacionJson):
     try:
         print(f"Proyecto: {datos.proyecto}")
         print(f"Dispositivo: {datos.dispositivo}")
@@ -134,7 +135,12 @@ async def simular_datos(datos: DatosSimulacion):
         print(f"Sensores recibidos: {len(datos.sensores)}")
 
         for sensor in datos.sensores:
-            print(f"Sensor: {sensor.nombre}, Datos: {sensor.datos}")
+            print(f"Sensor: {sensor.nombre}")
+            for campo in sensor.campos_sensores:
+                print(f"  Campo: {campo.nombre}")
+                for valor in campo.valores:
+                    print(f"    Datos: {valor.datos}")
+
 
 
         resultados = await simular_datos_json(datos)
