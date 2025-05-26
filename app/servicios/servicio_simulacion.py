@@ -10,6 +10,7 @@ import pymysql
 import pymysql.cursors
 
 from app.api.modelos.simulacion import DatosSimulacion, DatoSensor  
+from app.api.modelos.simulacionJson import DatosSimulacionJson, DatoSensor  # modelo para el json en el body para la simulacion desde el post  
 
 # Función para obtener una conexión a la base de datos
 def get_db_connection():
