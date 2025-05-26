@@ -107,13 +107,13 @@ async def simular_datos_csv(
     return procesado
 
 #Simular datos a traves de json
-async def simular_datos_json(datos: DatosSimulacion) -> List[Dict[str, Any]]:
+async def simular_datos_json(datos: DatosSimulacionJson) -> List[Dict[str, Any]]:
     procesado = []
     conn = None
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
 
         # Validar proyecto
         cursor.execute("SELECT id FROM proyectos WHERE nombre = %s", (datos.proyecto,))
@@ -125,7 +125,7 @@ async def simular_datos_json(datos: DatosSimulacion) -> List[Dict[str, Any]]:
             }]
         proyecto_id = proyecto_row["id"]
 
-        # Validar dispositivo relacionado al proyecto
+        # Validar dispositivo
         cursor.execute("SELECT id FROM dispositivos WHERE nombre = %s AND proyecto_id = %s", (datos.dispositivo, proyecto_id))
         dispositivo_row = cursor.fetchone()
         if not dispositivo_row:
@@ -136,54 +136,73 @@ async def simular_datos_json(datos: DatosSimulacion) -> List[Dict[str, Any]]:
         dispositivo_id = dispositivo_row["id"]
 
         # Obtener fecha y hora
-        fecha_str = datos.fecha or datetime.now().strftime("%d/%m/%Y")
+        fecha_str = datos.fecha or datetime.now().strftime("%d-%m-%Y")
         hora_str = datos.hora or datetime.now().strftime("%H:%M:%S")
-        fecha_hora_lectura = datetime.strptime(f"{fecha_str} {hora_str}", "%d/%m/%Y %H:%M:%S")
+        
+
 
         # Procesar sensores
         for sensor in datos.sensores:
-            for campo, valor in sensor.datos.items():
-                try:
-                    if campo.lower() == "temperatura":
-                        campo_id = configuracion.campo_temperatura_id
-                    elif campo.lower() == "humedad":
-                        campo_id = configuracion.campo_humedad_id
-                    else:
-                        raise ValueError(f"Campo desconocido: {campo}")
+            # Validar sensor
+            cursor.execute("SELECT id FROM sensores WHERE nombre = %s AND dispositivo_id = %s", (sensor.nombre, dispositivo_id))
+            sensor_row = cursor.fetchone()
+            if not sensor_row:
+                procesado.append({
+                    "sensor": sensor.nombre,
+                    "status": "error",
+                    "message": f"Sensor '{sensor.nombre}' no existe en el dispositivo '{datos.dispositivo}'"
+                })
+                continue
+            sensor_id = sensor_row["id"]
 
-                    sql = "INSERT INTO valores (valor, fecha_hora_lectura, campo_id) VALUES (%s, %s, %s)"
-                    cursor.execute(sql, (str(valor), fecha_hora_lectura, campo_id))
-                    conn.commit()
-
+            for campo in sensor.campos_sensores:
+                # Validar campo
+                cursor.execute("SELECT id FROM campos_sensores WHERE nombre = %s AND sensor_id = %s", (campo.nombre, sensor_id))
+                campo_row = cursor.fetchone()
+                if not campo_row:
                     procesado.append({
                         "sensor": sensor.nombre,
-                        "campo": campo,
-                        "valor": valor,
-                        "fecha_hora_lectura": fecha_hora_lectura.isoformat(),
-                        "status": "success"
-                    })
-
-                except pymysql.Error as e:
-                    conn.rollback()
-                    print(f"Error de DB al insertar {campo} de {sensor.nombre}: {e}")
-                    procesado.append({
-                        "sensor": sensor.nombre,
-                        "campo": campo,
-                        "valor": valor,
+                        "campo": campo.nombre,
                         "status": "error",
-                        "message": f"Error DB: {e}"
+                        "message": f"Campo '{campo.nombre}' no existe en el sensor '{sensor.nombre}'"
                     })
+                    continue
+                campo_id = campo_row["id"]
 
-                except Exception as e:
-                    conn.rollback()
-                    print(f"Error inesperado: {e}")
-                    procesado.append({
-                        "sensor": sensor.nombre,
-                        "campo": campo,
-                        "valor": valor,
-                        "status": "error",
-                        "message": f"Error: {e}"
-                    })
+                for valor in campo.valores:
+                    for  fecha_lectura, medicion in valor.datos.items():
+                        try:
+                            fecha_lectura = datetime.strptime(f"{fecha_str} {hora_str}", "%d-%m-%Y %H:%M:%S")
+                            cursor.execute(
+                                "INSERT INTO valores (valor, fecha_hora_lectura, campo_id) VALUES (%s, %s, %s)",
+                                (medicion, fecha_lectura, campo_id)
+                            )
+                            conn.commit()
+                            procesado.append({
+                                "sensor": sensor.nombre,
+                                "campo": campo.nombre,
+                                "valor": medicion,
+                                "fecha_hora_lectura": fecha_lectura.isoformat(),
+                                "status": "success"
+                            })
+                        except pymysql.MySQLError as e:
+                            conn.rollback()
+                            procesado.append({
+                                "sensor": sensor.nombre,
+                                "campo": campo.nombre,
+                                "valor": medicion,
+                                "status": "error",
+                                "message": f"DB Error: {str(e)}"
+                            })
+                        except Exception as e:
+                            conn.rollback()
+                            procesado.append({
+                                "sensor": sensor.nombre,
+                                "campo": campo.nombre,
+                                "valor": medicion,
+                                "status": "error",
+                                "message": f"Unexpected Error: {str(e)}"
+                            })
 
     finally:
         if conn:
