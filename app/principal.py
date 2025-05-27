@@ -10,6 +10,7 @@ from app.configuracion import configuracion
 
 from app.servicios.endpoints import router as valores_router
 from app.api.rutas.proyectos.proyectos import router_proyecto as router_proyecto
+from app.api.rutas.dispositivos.dispositivos import router_dispositivo as router_dispositivo
 
 aplicacion = FastAPI()
 
@@ -30,6 +31,7 @@ aplicacion.mount("/web", StaticFiles(directory="web"), name="web")
 #Se incluyen las rutas correspondientes
 aplicacion.include_router(valores_router)
 aplicacion.include_router(router_proyecto)
+aplicacion.include_router(router_dispositivo)
 
 @aplicacion.get("/", response_class=HTMLResponse)
 async def read_root():
