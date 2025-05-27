@@ -69,6 +69,111 @@ async def actualizar_datos_proyecto(id,datos: ProyectoActualizar):
             content={"message": "Error inesperado durante la actualización", "details": str(e)},
         )
 
+# Eliminar proyecto por id en espesifico o todos los proyectos pertenecientes al usuario
+@router_proyecto.delete("/eliminar_proyecto/")
+async def eliminar_proyecto(
+    id: Optional[int] = Query(None, description="Eliminar por ID"),
+    usuario_id: int = Query(..., description="ID del usuario") 
+) -> Dict:
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Validar que el usuario exista
+        cursor.execute("SELECT * FROM usuarios WHERE id = %s", (usuario_id,))
+        usuario_row = cursor.fetchone()
+        if not usuario_row:
+            return {
+                "status": "error",
+                "message": f"El usuario con ID '{usuario_id}' no existe"
+            }
+        # Validar existencia del proyecto
+        cursor.execute("SELECT * FROM proyectos WHERE id = %s", (id,))
+        proyecto_row = cursor.fetchone()
+        if not proyecto_row:
+            return {
+                "status": "error",
+                "message": f"El proyecto con id: '{id}' no existe"
+            }
+
+        
+        #Validar que el proyecto le corresponda al usuario id 
+        cursor.execute("SELECT * FROM proyectos WHERE id = %s AND  usuario_id = %s", (id,usuario_id))
+        proyecto_valido = cursor.fetchone()
+        if not proyecto_valido:
+            return {
+                "status": "error",
+                "message": f"El proyecto con id '{id}' no le pertenece al usuario con id '{usuario_id}'"
+            }
+
+
+        # Obtener proyectos a eliminar
+        if id is not None:
+         
+
+            cursor.execute("SELECT id FROM proyectos WHERE id = %s AND usuario_id = %s", (id, usuario_id))
+        else:
+            cursor.execute("SELECT id FROM proyectos WHERE usuario_id = %s", (usuario_id))
+
+        proyectos = cursor.fetchall()
+        if not proyectos:
+            return {
+                "status": "error",
+                "message": "No se encontraron proyectos para eliminar"
+            }
+
+        for proyecto in proyectos:
+            proyecto_id = proyecto["id"]
+
+            #Obtener dispositivos del proyecto
+            cursor.execute("SELECT id FROM dispositivos WHERE proyecto_id = %s", (proyecto_id,))
+            dispositivos = cursor.fetchall()
+
+            for dispositivo in dispositivos:
+                dispositivo_id = dispositivo["id"]
+
+                # Obtener sensores del dispositivo
+                cursor.execute("SELECT id FROM sensores WHERE dispositivo_id = %s", (dispositivo_id,))
+                sensores = cursor.fetchall()
+
+                for sensor in sensores:
+                    sensor_id = sensor["id"]
+
+                    # Obtener campos del sensor
+                    cursor.execute("SELECT id FROM campos_sensores WHERE sensor_id = %s", (sensor_id,))
+                    campos = cursor.fetchall()
+
+                    for campo in campos:
+                        campo_id = campo["id"]
+
+                        # Eliminar valores registrados del campo
+                        cursor.execute("DELETE FROM valores WHERE campo_id = %s", (campo_id,))
+
+                    # Eliminar campos del sensor
+                    cursor.execute("DELETE FROM campos_sensores WHERE sensor_id = %s", (sensor_id,))
+
+                # Eliminar sensores del dispositivo
+                cursor.execute("DELETE FROM sensores WHERE dispositivo_id = %s", (dispositivo_id,))
+
+            # Eliminar dispositivos del proyecto
+            cursor.execute("DELETE FROM dispositivos WHERE proyecto_id = %s", (proyecto_id,))
+
+            # Eliminar el proyecto
+            cursor.execute("DELETE FROM proyectos WHERE id = %s", (proyecto_id,))
+
+        conn.commit()
+        return {
+            "status": "success",
+            "message": f"{len(proyectos)} proyecto(s) eliminado(s) correctamente para el usuario con ID '{usuario_id}'."
+        }
+
+    except pymysql.MySQLError as e:
+        raise HTTPException(status_code=500, detail=f"Error al eliminar proyecto(s): {str(e)}")
+    finally:
+        if conn:
+            conn.close()
+
+
 
 
 #Crear proyectos
