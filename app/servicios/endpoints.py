@@ -88,41 +88,6 @@ async def eliminar_valores(
     finally:
         conn.close()
 
-# Eliminar valor del id del campo correspondiente enviado
-@router.delete("/EliminaValoresId/{id}")
-async def eliminar_valores(
-    id: int = Path(..., description="ID del valor a eliminar (por ruta)"),
-    campo_id: Optional[int] = Query(None, description="Eliminar por campo_id"),
-    fecha_limite: Optional[str] = Query(None, description="Eliminar datos anteriores a esta fecha (YYYY-MM-DD)")
-) -> Dict:
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Comienza con una condición obligatoria por el ID de la ruta
-        query = "DELETE FROM valores WHERE campo_id = %s"
-        params = [id]
-
-        # Si se agrega campo_id como condición adicional
-        if campo_id is not None:
-            query += " AND campo_id = %s"
-            params.append(campo_id)
-
-        # Si se agrega la fecha límite
-        if fecha_limite:
-            query += " AND fecha_hora_lectura < %s"
-            params.append(fecha_limite)
-
-        resultado = cursor.execute(query, params)
-        conn.commit()
-
-        return {"message": f"{resultado} registro(s) eliminado(s)."}
-
-    except pymysql.MySQLError as e:
-        raise HTTPException(status_code=500, detail=f"Error al eliminar datos: {str(e)}")
-    finally:
-        conn.close()
-
 
 
 # Simular datos desde json
