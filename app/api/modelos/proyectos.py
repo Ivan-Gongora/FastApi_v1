@@ -17,9 +17,9 @@ class ProyectoActualizar(BaseModel):
     descripcion: Optional[str] = None
     usuario_id: Optional[int] = None
 
-# Modelo con ID, por ejemplo, para respuestas
+# Modelo con ID, para respuestas
 class Proyecto(ProyectoBase):
     id: int
 
     class Config:
-        orm_mode = True  # Necesario si usas ORMs como SQLAlchemy
+        orm_mode = True  
