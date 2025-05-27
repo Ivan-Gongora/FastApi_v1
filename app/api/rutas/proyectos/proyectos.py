@@ -1,10 +1,11 @@
 
 from fastapi import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Query, HTTPException
 from fastapi.responses import JSONResponse
 from datetime import datetime
 import pymysql
+
 
 from app.configuracion import configuracion
 from app.servicios.servicio_simulacion import get_db_connection, simular_datos_json
@@ -45,28 +46,19 @@ async def crear_proyecto(datos: ProyectoCrear):
 
 
 # Actualizar información de proyectos
-@router_proyecto.put("/ActualizarDatosProyecto/{id}")
+@router_proyecto.put("/actualizar_proyecto/{id}")
 async def actualizar_datos_proyecto(id,datos: ProyectoActualizar):
     
     try:
-        print(f"Proyecto: {datos.proyecto}")
-        print(f"Dispositivo: {datos.dispositivo}")
-        print(f"Fecha: {datos.fecha}, Hora: {datos.hora}")
-        print(f"Sensores recibidos: {len(datos.sensores)}")
+        print(f"id proyecto: {id}")
+        print(f"usuario_id: {datos.usuario_id}")
 
-        for sensor in datos.sensores:
-            print(f"Sensor: {sensor.nombre}")
-            for campo in sensor.campos_sensores:
-                print(f"  Campo: {campo.nombre}")
-                for valor in campo.valores:
-                    print(f"    Datos: {valor.datos}")
+       
 
-
-
-        resultados = await simular_datos_json(datos)
+        resultados = await actualizar_datos_proyecto(id,datos)
         
 
-        return {"message": "Simulación completada con JSON.", "resultados": resultados}
+        return {"message": "Actualización de datos para actualizar completada.", "resultados": resultados}
 
     except ValueError as e:
         return {"message": "Error en los datos enviados", "details": str(e)}
@@ -74,7 +66,7 @@ async def actualizar_datos_proyecto(id,datos: ProyectoActualizar):
         print("Excepción general:", type(e), e)
         return JSONResponse(
             status_code=500,
-            content={"message": "Error inesperado durante la simulación", "details": str(e)},
+            content={"message": "Error inesperado durante la actualización", "details": str(e)},
         )
 
 
@@ -133,3 +125,103 @@ async def set_proyecto(datos: ProyectoCrear) -> List[Dict[str, Any]]:
             conn.close()
 
     return procesado
+
+#Función para ctualizar datos del proyecto
+async def actualizar_datos_proyecto(id: int, datos: ProyectoActualizar) -> List[Dict[str, Any]]:
+    procesado = []
+    conn = None
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+
+        # Validar existencia del proyecto
+        cursor.execute("SELECT * FROM proyectos WHERE id = %s", (id,))
+        proyecto_row = cursor.fetchone()
+        if not proyecto_row:
+            return [{
+                "status": "error",
+                "message": f"El proyecto con id: '{id}' no existe"
+            }]
+
+
+         # Validar que el usuario id exista 
+        cursor.execute("SELECT * FROM usuarios WHERE id = %s", (datos.usuario_id))
+
+        usuario_row = cursor.fetchone()
+        if not usuario_row:
+            return [{
+                "status": "error",
+                "message": f"El usuario con id: '{datos.usuario_id}' no existe"
+            }]
+        
+        #Validar que el proyecto le corresponda al usuario id 
+        cursor.execute("SELECT * FROM proyectos WHERE id = %s AND  usuario_id = %s", (id, datos.usuario_id))
+        proyecto_valido = cursor.fetchone()
+        if not proyecto_valido:
+            return [{
+                "status": "error",
+                "message": f"El proyecto con id '{id}' no le pertenece al usuario con id '{datos.usuario_id}'"
+            }]
+
+
+        # Construir lista de campos a actualizar dinámicamente
+        campos = []
+        valores = []
+
+        if datos.nombre is not None:
+            campos.append("nombre = %s")
+            valores.append(datos.nombre)
+
+        if datos.descripcion is not None:
+            campos.append("descripcion = %s")
+            valores.append(datos.descripcion)
+
+
+
+
+        valores.append(id)  # Para el WHERE
+
+        # Ejecutar el UPDATE solo si hay algo que actualizar
+        if campos:
+            sql = f"UPDATE proyectos SET {', '.join(campos)} WHERE id = %s"
+            cursor.execute(sql, valores)
+            conn.commit()
+
+            procesado.append({
+                "status": "success",
+                "message": f"Proyecto con id '{id}'con el id de usuario '{datos.usuario_id}' actualizado correctamente",
+                "actualizado": {
+                    "nombre": datos.nombre,
+                    "descripcion": datos.descripcion
+                }
+            })
+        else:
+            procesado.append({
+                "status": "warning",
+                "message": "No se proporcionaron datos para actualizar"
+            })
+
+    except pymysql.MySQLError as e:
+        if conn:
+            conn.rollback()
+        procesado.append({
+            "status": "error",
+            "message": f"DB Error: {str(e)}"
+        })
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        procesado.append({
+            "status": "error",
+            "message": f"Unexpected Error: {str(e)}"
+        })
+
+    finally:
+        if conn:
+            conn.close()
+
+    return procesado
+
