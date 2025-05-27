@@ -10,12 +10,13 @@ class ProyectoBase(BaseModel):
 # Modelo para crear p
 class ProyectoCrear(ProyectoBase):
     pass
-
+    
 # Modelo para actualizar parcialmente
 class ProyectoActualizar(BaseModel):
+    
     nombre: Optional[str] = None
     descripcion: Optional[str] = None
-    usuario_id: Optional[int] = None
+    usuario_id: int 
 
 # Modelo con ID, para respuestas
 class Proyecto(ProyectoBase):
