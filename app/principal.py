@@ -9,6 +9,7 @@ from app.servicios.servicio_simulacion import simular_datos_csv
 from app.configuracion import configuracion
 
 from app.servicios.endpoints import router as valores_router
+from app.api.rutas.proyectos.proyectos import router_proyecto as router_proyecto
 
 aplicacion = FastAPI()
 
@@ -26,8 +27,9 @@ aplicacion.add_middleware(
 )
 
 aplicacion.mount("/web", StaticFiles(directory="web"), name="web")
-
+#Se incluyen las rutas correspondientes
 aplicacion.include_router(valores_router)
+aplicacion.include_router(router_proyecto)
 
 @aplicacion.get("/", response_class=HTMLResponse)
 async def read_root():
