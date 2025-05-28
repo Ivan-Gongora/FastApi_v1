@@ -12,7 +12,7 @@ from app.servicios.servicio_simulacion import get_db_connection, simular_datos_j
 
 from app.api.modelos.simulacion import DatosSimulacion
 from app.api.modelos.proyectos import ProyectoCrear, ProyectoActualizar,Proyecto
-from app.servicios import simulacion as servicio_simulacion
+from app.servicios import servicio_simulacion as servicio_simulacion
 
 router_proyecto = APIRouter()
 
@@ -47,17 +47,25 @@ async def crear_proyecto(datos: ProyectoCrear):
             content={"message": "Error inesperado durante la inserción ", "details": str(e)},
         )
 
-#Obtener los proyectos por usuario_id
+# #Obtener los proyectos por usuario_id
+# @router_proyecto.get("/proyectos/usuario/{usuario_id}", response_model=List[Proyecto])
+# async def obtener_proyectos_por_usuario(usuario_id: int):
+#     try:
+#         proyectos = await servicio_simulacion.obtener_proyectos_por_usuario(usuario_id)
+#         if not proyectos:
+#             raise HTTPException(status_code=404, detail="No se encontraron proyectos para este usuario.")
+#         return proyectos
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error al obtener proyectos: {str(e)}")
+
+# Obtener los proyectos por usuario_id
 @router_proyecto.get("/proyectos/usuario/{usuario_id}", response_model=List[Proyecto])
 async def obtener_proyectos_por_usuario(usuario_id: int):
-    try:
-        proyectos = await servicio_simulacion.obtener_proyectos_por_usuario(usuario_id)
-        if not proyectos:
-            raise HTTPException(status_code=404, detail="No se encontraron proyectos para este usuario.")
-        return proyectos
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener proyectos: {str(e)}")
-
+    # try:  <-- COMENTAR O ELIMINAR ESTO TEMPORALMENTE
+    proyectos = await servicio_simulacion.obtener_proyectos_por_usuario(usuario_id)
+    if not proyectos:
+        raise HTTPException(status_code=404, detail="No se encontraron proyectos para este usuario.")
+    return proyectos
 #Obtener los proyectos por id
 @router_proyecto.get("/proyectos/{id}", response_model=Proyecto)
 async def obtener_proyecto_por_id(id: int):

@@ -49,31 +49,75 @@ async def obtener_proyectos() -> List[Dict[str, Any]]:
         if conn:
             conn.close()
 
-# ---Funcion para la consulta GET para proyectos por usuario_id
+
+
+
+
+# --- Funcion para la consulta GET para proyectos por usuario_id
 async def obtener_proyectos_por_usuario(usuario_id: int) -> List[Dict[str, Any]]:
     conn = None
     try:
-        conn = get_db_connection()
+        conn = get_db_connection() # O get_db_connection() si la centralizaste de nuevo
         cursor = conn.cursor()
-        cursor.execute("SELECT id, nombre FROM proyectos WHERE usuario_id = %s", (usuario_id,))
-        return cursor.fetchall()
+        # ¡IMPORTANTE! Asegúrate de seleccionar 'descripcion' y 'usuario_id' también
+        cursor.execute("SELECT id, nombre, descripcion, usuario_id FROM proyectos WHERE usuario_id = %s", (usuario_id,))
+        # --- Imprime el resultado de la consulta para inspección ---
+        result = cursor.fetchall()
+        print("Resultado de la consulta:", result) # <--- AÑADIR ESTA LÍNEA TEMPORALMENTE
+        return result
     except Exception as e:
         print(f"Error al obtener proyectos por usuario: {e}")
         return []
     finally:
         if conn:
             conn.close()
+# # --- Funcion para la consulta GET para proyectos por id
+# async def obtener_proyecto_por_id(proyecto_id: int) -> Dict[str, Any] | None:
+#     conn = None
+#     try:
+#         conn = get_db_connection()
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT id, nombre FROM proyectos WHERE id = %s", (proyecto_id,))
+#         return cursor.fetchone()
+#     except Exception as e:
+#         print(f"Error al obtener proyecto por ID: {e}")
+#         return None
+#     finally:
+#         if conn:
+#             conn.close()
+
 
 # --- Funcion para la consulta GET para proyectos por id
 async def obtener_proyecto_por_id(proyecto_id: int) -> Dict[str, Any] | None:
     conn = None
     try:
-        conn = get_db_connection()
+        conn = get_db_connection() # O get_db_connection() si la centralizaste de nuevo
         cursor = conn.cursor()
-        cursor.execute("SELECT id, nombre FROM proyectos WHERE id = %s", (proyecto_id,))
-        return cursor.fetchone()
+        
+        # ¡IMPORTANTE! Asegúrate de seleccionar 'descripcion' y 'usuario_id' también
+        # Asegúrate de que los nombres de las columnas aquí coincidan EXACTAMENTE con los de tu DB.
+        # Por ejemplo, si en tu DB es 'usuario_ID' en lugar de 'usuario_id', debes usar 'usuario_ID'.
+        cursor.execute("SELECT id, nombre, descripcion, usuario_id FROM proyectos WHERE id = %s", (proyecto_id,))
+        
+        result = cursor.fetchone() #fetchone() para un solo resultado
+        
+        # --- NUEVAS LÍNEAS PARA DEBUGGING ---
+        if result:
+            print(f"Resultado completo de la consulta para proyecto ID {proyecto_id}: {result}")
+            print(f"Keys (nombres de columnas) en el resultado: {result.keys()}")
+            # Verifica si las claves esperadas están presentes
+            if 'descripcion' not in result:
+                print("¡ADVERTENCIA! 'descripcion' no se encontró en el resultado de la consulta.")
+            if 'usuario_id' not in result:
+                print("¡ADVERTENCIA! 'usuario_id' no se encontró en el resultado de la consulta.")
+        else:
+            print(f"No se encontró ningún proyecto con el ID {proyecto_id}.")
+        # --- FIN DE LÍNEAS PARA DEBUGGING ---
+        
+        return result
     except Exception as e:
         print(f"Error al obtener proyecto por ID: {e}")
+        # En caso de error, puedes devolver None para que la ruta lance el 404 o 500
         return None
     finally:
         if conn:
