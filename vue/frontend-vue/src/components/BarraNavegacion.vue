@@ -10,9 +10,7 @@
           <li class="nav-item">
             <router-link to="/" class="nav-link">Acerca de</router-link>
           </li>
-          <li class="nav-item">
-            <router-link to="/" class="nav-link">Contacto</router-link>
-          </li>
+        
         </ul>
         <form class="d-flex me-2">
           <input class="form-control me-2" type="search" placeholder="Buscar" aria-label="Buscar">
