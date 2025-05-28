@@ -9,7 +9,8 @@ import pymysql
 from app.configuracion import configuracion
 from app.servicios.servicio_simulacion import get_db_connection, simular_datos_json
 
-from app.api.modelos.dispositivos import DispositivoCrear, DispositivoActualizar
+from app.api.modelos.dispositivos import DispositivoCrear, DispositivoActualizar,Dispositivo, Sensor, CampoSensor
+from app.servicios import simulacion as servicio_simulacion 
 
 router_dispositivo = APIRouter()
 
@@ -297,3 +298,26 @@ async def actualizar_datos_dispositivo(dispositivo_id: int, datos: DispositivoAc
             conn.close()
 
     return procesado
+
+
+@router_dispositivo.get("/proyectos/{proyecto_id}/dispositivos", response_model=List[Dispositivo])
+async def get_dispositivos_por_proyecto(proyecto_id: int):
+    dispositivos = await servicio_simulacion.obtener_dispositivos_por_proyecto(proyecto_id)
+    if not dispositivos:
+        # Aunque no es un error de servidor, un 404 es una respuesta apropiada si no hay dispositivos
+        raise HTTPException(status_code=404, detail="No se encontraron dispositivos para este proyecto.")
+    return dispositivos
+
+@router_dispositivo.get("/dispositivos/{dispositivo_id}/sensores", response_model=List[Sensor])
+async def get_sensores_por_dispositivo(dispositivo_id: int):
+    sensores = await servicio_simulacion.obtener_sensores_por_dispositivo(dispositivo_id)
+    if not sensores:
+        raise HTTPException(status_code=404, detail="No se encontraron sensores para este dispositivo.")
+    return sensores
+
+@router_dispositivo.get("/sensores/{sensor_id}/campos", response_model=List[CampoSensor])
+async def get_campos_por_sensor(sensor_id: int):
+    campos = await servicio_simulacion.obtener_campos_por_sensor(sensor_id)
+    if not campos:
+        raise HTTPException(status_code=404, detail="No se encontraron campos para este sensor.")
+    return campos

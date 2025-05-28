@@ -11,11 +11,16 @@ from app.configuracion import configuracion
 from app.servicios.servicio_simulacion import get_db_connection, simular_datos_json
 
 from app.api.modelos.simulacion import DatosSimulacion
-from app.api.modelos.proyectos import ProyectoCrear, ProyectoActualizar
+from app.api.modelos.proyectos import ProyectoCrear, ProyectoActualizar,Proyecto
+from app.servicios import simulacion as servicio_simulacion
 
 router_proyecto = APIRouter()
 
 
+@router_proyecto.get("/proyectos", response_model=List[Proyecto])
+async def get_proyectos():
+    proyectos = await servicio_simulacion.obtener_proyectos()
+    return proyectos
 
 
 # Crear Proyectos 

@@ -33,3 +33,44 @@ class Dispositivo(DispositivoBase):
 
     class Config:
         orm_mode = True
+
+class Proyecto(BaseModel):
+    id: int
+    nombre: str
+
+    class Config:
+        from_attributes = True
+
+class Dispositivo(BaseModel):
+    id: int
+    nombre: str
+    proyecto_id: int
+
+    class Config:
+        from_attributes = True
+
+class Sensor(BaseModel):
+    id: int
+    nombre: str
+    dispositivo_id: int
+
+    class Config:
+        from_attributes = True
+
+class CampoSensor(BaseModel):
+    id: int
+    nombre: str
+    sensor_id: int
+
+    class Config:
+        from_attributes = True
+
+# Si necesitas un modelo para los datos que vienen del CSV/simulación
+class ValorSimuladoResponse(BaseModel):
+    row_number: int
+    fecha_hora_lectura: str
+    status: str
+    inserted_mappings: int
+    dispositivo_id: int
+    proyecto_id: int
+    message: Optional[str] = None
