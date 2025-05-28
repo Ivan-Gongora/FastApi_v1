@@ -49,6 +49,36 @@ async def obtener_proyectos() -> List[Dict[str, Any]]:
         if conn:
             conn.close()
 
+# ---Funcion para la consulta GET para proyectos por usuario_id
+async def obtener_proyectos_por_usuario(usuario_id: int) -> List[Dict[str, Any]]:
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre FROM proyectos WHERE usuario_id = %s", (usuario_id,))
+        return cursor.fetchall()
+    except Exception as e:
+        print(f"Error al obtener proyectos por usuario: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+# --- Funcion para la consulta GET para proyectos por id
+async def obtener_proyecto_por_id(proyecto_id: int) -> Dict[str, Any] | None:
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre FROM proyectos WHERE id = %s", (proyecto_id,))
+        return cursor.fetchone()
+    except Exception as e:
+        print(f"Error al obtener proyecto por ID: {e}")
+        return None
+    finally:
+        if conn:
+            conn.close()
+
 async def obtener_dispositivos_por_proyecto(proyecto_id: int) -> List[Dict[str, Any]]:
     conn = None
     try:

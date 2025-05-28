@@ -46,8 +46,28 @@ async def crear_proyecto(datos: ProyectoCrear):
             status_code=500,
             content={"message": "Error inesperado durante la inserción ", "details": str(e)},
         )
-    
 
+#Obtener los proyectos por usuario_id
+@router_proyecto.get("/proyectos/usuario/{usuario_id}", response_model=List[Proyecto])
+async def obtener_proyectos_por_usuario(usuario_id: int):
+    try:
+        proyectos = await servicio_simulacion.obtener_proyectos_por_usuario(usuario_id)
+        if not proyectos:
+            raise HTTPException(status_code=404, detail="No se encontraron proyectos para este usuario.")
+        return proyectos
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener proyectos: {str(e)}")
+
+#Obtener los proyectos por id
+@router_proyecto.get("/proyectos/{id}", response_model=Proyecto)
+async def obtener_proyecto_por_id(id: int):
+    try:
+        proyecto = await servicio_simulacion.obtener_proyecto_por_id(id)
+        if not proyecto:
+            raise HTTPException(status_code=404, detail="Proyecto no encontrado.")
+        return proyecto
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener proyecto: {str(e)}")
 
 
 # Actualizar información de proyectos

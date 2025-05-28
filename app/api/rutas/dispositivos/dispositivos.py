@@ -321,3 +321,45 @@ async def get_campos_por_sensor(sensor_id: int):
     if not campos:
         raise HTTPException(status_code=404, detail="No se encontraron campos para este sensor.")
     return campos
+
+#Peticiones GET con filtrado individual
+@router_dispositivo.get("/dispositivos/{dispositivo_id}", response_model=Dispositivo)
+async def get_dispositivo_por_id(dispositivo_id: int):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+        cursor.execute("SELECT * FROM dispositivos WHERE id = %s", (dispositivo_id,))
+        dispositivo = cursor.fetchone()
+
+        if not dispositivo:
+            raise HTTPException(status_code=404, detail=f"Dispositivo con ID '{dispositivo_id}' no encontrado.")
+
+        return dispositivo
+
+    except pymysql.MySQLError as e:
+        raise HTTPException(status_code=500, detail=f"Error al consultar el dispositivo: {str(e)}")
+
+    finally:
+        if conn:
+            conn.close()
+
+#Peticiones GET con filtrado general
+@router_dispositivo.get("/dispositivos", response_model=List[Dispositivo])
+async def get_todos_los_dispositivos():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+        cursor.execute("SELECT * FROM dispositivos")
+        dispositivos = cursor.fetchall()
+
+        if not dispositivos:
+            raise HTTPException(status_code=404, detail="No se encontraron dispositivos en la base de datos.")
+
+        return dispositivos
+
+    except pymysql.MySQLError as e:
+        raise HTTPException(status_code=500, detail=f"Error al consultar los dispositivos: {str(e)}")
+
+    finally:
+        if conn:
+            conn.close()
