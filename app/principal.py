@@ -17,16 +17,20 @@ from app.api.rutas.dispositivos.dispositivos import router_dispositivo as router
 aplicacion = FastAPI()
 
 origins = [
-    "http://localhost:8001",
-    "http://127.0.0.1:8001",
+    "http://localhost",
+    "http://localhost:8080",  # <--- Make sure this is present and correct
+    "http://127.0.0.1:8080",
+    "http://localhost:5173",  # Keep this if you also test with Vite's default dev server
+    "http://127.0.0.1:5173",
+    # Add any other origins where your frontend might be hosted, e.g., "http://your-production-domain.com"
 ]
 
 aplicacion.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"], # Allows all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"], # Allows all headers
 )
 
 aplicacion.mount("/web", StaticFiles(directory="web"), name="web")

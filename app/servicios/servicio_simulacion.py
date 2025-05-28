@@ -33,14 +33,43 @@ def get_db_connection():
 
 
 
-# --- Funciones de consulta de datos (AHORA LLAMAN A get_db_connection_local) ---
+# # --- Funciones de consulta de datos (AHORA LLAMAN A get_db_connection_local) ---
+# async def obtener_proyectos() -> List[Dict[str, Any]]:
+#     conn = None
+#     try:
+#         conn = get_db_connection() # ¡Cambio aquí!
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT id, nombre FROM proyectos")
+#         proyectos = cursor.fetchall()
+#         return proyectos
+#     except Exception as e:
+#         print(f"Error al obtener proyectos: {e}")
+#         return []
+#     finally:
+#         if conn:
+#             conn.close()
+
+
+
+# app/servicios/simulacion.py
+
+# ... (otras importaciones y tu función get_db_connection_local o get_db_connection) ...
+
 async def obtener_proyectos() -> List[Dict[str, Any]]:
     conn = None
     try:
-        conn = get_db_connection() # ¡Cambio aquí!
+        conn = get_db_connection() # O get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, nombre FROM proyectos")
+        # ¡CAMBIO AQUÍ! ASEGÚRATE DE INCLUIR 'descripcion' Y 'usuario_id'
+        cursor.execute("SELECT id, nombre, descripcion, usuario_id FROM proyectos") # <--- ¡CAMBIO CLAVE!
         proyectos = cursor.fetchall()
+
+        # --- AÑADE ESTAS LÍNEAS TEMPORALMENTE PARA DEBUGGING ---
+        print("Resultado de la consulta obtener_proyectos:", proyectos)
+        if proyectos:
+            print("Keys (nombres de columnas) en el primer proyecto:", proyectos[0].keys())
+        # --- FIN DE LÍNEAS PARA DEBUGGING ---
+
         return proyectos
     except Exception as e:
         print(f"Error al obtener proyectos: {e}")
@@ -48,8 +77,6 @@ async def obtener_proyectos() -> List[Dict[str, Any]]:
     finally:
         if conn:
             conn.close()
-
-
 
 
 

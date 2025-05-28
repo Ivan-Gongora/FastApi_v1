@@ -6,7 +6,9 @@ import VistaPlataformaPrincipal from '../components/plataforma/VistaPlataformaPr
 import VistaDispositivos from '../components/dispositivos/VistaDispositivos.vue'; 
 import DetalleDispositivo from '../components/dispositivos/DetalleDispositivo.vue';
 import VistaMisProyectos from '../components/proyecto/VistaMisProyectos.vue';
-
+import MenuSimulacion from '../components/simulador/VistaSimulacionMenu.vue';
+import VistaC from '../components/simulador/csvEnviar.vue';
+import MenuGestion from '../components/GestionDB/VistaGestionMenu.vue'
 const routes = [
   {
     path: '/',
@@ -37,10 +39,23 @@ const routes = [
     path: '/detalle-dispositivo',
     name: 'DetalleDispositivo',
     component: DetalleDispositivo
-  }
+  },
+  {
+    path: '/menu-simulacion',
+    name: 'MenuSimulacion',
+    component: MenuSimulacion
+  },
+  {
+    path: '/vista-csv',
+    name: 'VistaCsv',
+    component: VistaC
+  },
+  {
+    path: '/menu-gestion',
+    name: 'MenuGestion',
+    component: MenuGestion
+  },
 
-
-  
 ];
 
 const router = createRouter({
