@@ -11,7 +11,7 @@
                 <i class="bi bi-graph-up text-info mb-3" style="font-size: 2em;"></i>
                 <h5 class="card-title">Simulador de Sensor</h5>
                 <p class="card-text small text-muted">Genera datos de un sensor de forma virtual.</p>
-                <router-link to="/simulacion/sensor" class="btn btn-info btn-sm">Ir al simulador</router-link>
+                <router-link to="/vista-csv" class="btn btn-info btn-sm">Ir al simulador</router-link>
               </div>
             </div>
           </div>

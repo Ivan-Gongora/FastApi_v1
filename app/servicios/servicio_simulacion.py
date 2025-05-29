@@ -6,8 +6,8 @@ import io
 from typing import List, Dict, Any
 
 from app.configuracion import configuracion
-import pymysql
-import pymysql.cursors
+import pymysql # type: ignore
+import pymysql.cursors # type: ignore
 
 from app.api.modelos.simulacion import DatosSimulacion, DatoSensor  
 from app.api.modelos.simulacionJson import DatosSimulacionJson, DatoSensor  # modelo para el json en el body para la simulacion desde el post  
@@ -115,36 +115,63 @@ async def obtener_proyectos_por_usuario(usuario_id: int) -> List[Dict[str, Any]]
 
 
 # --- Funcion para la consulta GET para proyectos por id
+# async def obtener_proyecto_por_id(proyecto_id: int) -> Dict[str, Any] | None:
+#     conn = None
+#     try:
+#         conn = get_db_connection() # O get_db_connection() si la centralizaste de nuevo
+#         cursor = conn.cursor()
+        
+#         # ¡IMPORTANTE! Asegúrate de seleccionar 'descripcion' y 'usuario_id' también
+#         # Asegúrate de que los nombres de las columnas aquí coincidan EXACTAMENTE con los de tu DB.
+#         # Por ejemplo, si en tu DB es 'usuario_ID' en lugar de 'usuario_id', debes usar 'usuario_ID'.
+#         cursor.execute("SELECT id, nombre, descripcion, usuario_id FROM proyectos WHERE id = %s", (proyecto_id,))
+        
+#         result = cursor.fetchone() #fetchone() para un solo resultado
+        
+#         # --- NUEVAS LÍNEAS PARA DEBUGGING ---
+#         if result:
+#             print(f"Resultado completo de la consulta para proyecto ID {proyecto_id}: {result}")
+#             print(f"Keys (nombres de columnas) en el resultado: {result.keys()}")
+#             # Verifica si las claves esperadas están presentes
+#             if 'descripcion' not in result:
+#                 print("¡ADVERTENCIA! 'descripcion' no se encontró en el resultado de la consulta.")
+#             if 'usuario_id' not in result:
+#                 print("¡ADVERTENCIA! 'usuario_id' no se encontró en el resultado de la consulta.")
+#         else:
+#             print(f"No se encontró ningún proyecto con el ID {proyecto_id}.")
+#         # --- FIN DE LÍNEAS PARA DEBUGGING ---
+        
+#         return result
+#     except Exception as e:
+#         print(f"Error al obtener proyecto por ID: {e}")
+#         # En caso de error, puedes devolver None para que la ruta lance el 404 o 500
+#         return None
+#     finally:
+#         if conn:
+#             conn.close()
 async def obtener_proyecto_por_id(proyecto_id: int) -> Dict[str, Any] | None:
+    
     conn = None
     try:
-        conn = get_db_connection() # O get_db_connection() si la centralizaste de nuevo
+        conn = get_db_connection()
         cursor = conn.cursor()
-        
-        # ¡IMPORTANTE! Asegúrate de seleccionar 'descripcion' y 'usuario_id' también
-        # Asegúrate de que los nombres de las columnas aquí coincidan EXACTAMENTE con los de tu DB.
-        # Por ejemplo, si en tu DB es 'usuario_ID' en lugar de 'usuario_id', debes usar 'usuario_ID'.
         cursor.execute("SELECT id, nombre, descripcion, usuario_id FROM proyectos WHERE id = %s", (proyecto_id,))
-        
-        result = cursor.fetchone() #fetchone() para un solo resultado
-        
-        # --- NUEVAS LÍNEAS PARA DEBUGGING ---
-        if result:
-            print(f"Resultado completo de la consulta para proyecto ID {proyecto_id}: {result}")
-            print(f"Keys (nombres de columnas) en el resultado: {result.keys()}")
-            # Verifica si las claves esperadas están presentes
-            if 'descripcion' not in result:
-                print("¡ADVERTENCIA! 'descripcion' no se encontró en el resultado de la consulta.")
-            if 'usuario_id' not in result:
-                print("¡ADVERTENCIA! 'usuario_id' no se encontró en el resultado de la consulta.")
-        else:
-            print(f"No se encontró ningún proyecto con el ID {proyecto_id}.")
-        # --- FIN DE LÍNEAS PARA DEBUGGING ---
-        
-        return result
+        return cursor.fetchone() # Asume que fetchone() devuelve un diccionario o None
     except Exception as e:
         print(f"Error al obtener proyecto por ID: {e}")
-        # En caso de error, puedes devolver None para que la ruta lance el 404 o 500
+        return None
+    finally:
+        if conn:
+            conn.close()
+async def obtener_dispositivo_por_id(dispositivo_id: int) -> Dict[str, Any] | None:
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, descripcion, proyecto_id FROM dispositivos WHERE id = %s", (dispositivo_id,))
+        return cursor.fetchone() # Asume que fetchone() devuelve un diccionario o None
+    except Exception as e:
+        print(f"Error al obtener dispositivo por ID: {e}")
         return None
     finally:
         if conn:
@@ -224,14 +251,16 @@ async def extract_csv_preview(file_content: bytes) -> Dict[str, Any]:
 
 # ... (resto de importaciones y funciones) ...
 
+
 async def simular_datos_csv(
     file_content: bytes,
     sensor_mappings: List[Dict[str, Any]],
     proyecto_id: int,
     dispositivo_id: int
-) -> List[Dict[str, Any]]:
-    procesado = []
-
+) -> Dict[str, Any]: # <--- ¡MIRA AQUÍ! DEBE SER Dict[str, Any]
+    registros_insertados = 0
+    errores_insercion = 0
+    
     csv_text = file_content.decode('utf-8')
     csv_file = io.StringIO(csv_text)
     reader = csv.reader(csv_file)
@@ -269,7 +298,7 @@ async def simular_datos_csv(
 
     conn = None
     try:
-        conn = get_db_connection() # O get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         fecha_idx = header_indices["Fecha"]
@@ -280,7 +309,8 @@ async def simular_datos_csv(
                 continue
 
             if len(row) <= max(header_indices.values()):
-                print(f"Skipping row {i+1} due to insufficient columns: {row}")
+                print(f"Saltando fila {i+1} debido a columnas insuficientes: {row}")
+                errores_insercion += 1
                 continue
 
             try:
@@ -294,39 +324,47 @@ async def simular_datos_csv(
                     try:
                         valor = float(valor)
                     except ValueError:
-                        pass
+                        pass # Si no se puede convertir a float, lo mantenemos como string
 
-                    # ¡REVERTIMOS ESTA CONSULTA! Solo inserta los campos de la tabla 'valores'
                     sql = "INSERT INTO valores (valor, fecha_hora_lectura, campo_id) VALUES (%s, %s, %s)"
                     cursor.execute(sql, (str(valor), fecha_hora_lectura, campo_id))
                 
                 conn.commit()
-
-                procesado.append({
-                    "row_number": i+1,
-                    "fecha_hora_lectura": fecha_hora_lectura.isoformat(),
-                    "status": "success",
-                    "inserted_mappings": len(sensor_mappings),
-                    # Ya no necesitamos enviar dispositivo_id y proyecto_id en la respuesta aquí si no se insertan
-                    # "dispositivo_id": dispositivo_id,
-                    # "proyecto_id": proyecto_id
-                })
-
+                registros_insertados += 1
+                
             except (IndexError, ValueError) as e:
                 conn.rollback()
-                print(f"Error procesando fila {i+1}: {e}")
-                procesado.append({"row_number": i+1, "status": "error", "message": f"Formato de datos inválido/columna ausente: {e}"})
+                print(f"Error procesando fila {i+1} (datos): {e}")
+                errores_insercion += 1
             except Exception as e:
                 conn.rollback()
                 print(f"Error inesperado en fila {i+1}: {e}")
-                procesado.append({"row_number": i+1, "status": "error", "message": f"Error inesperado: {e}"})
+                errores_insercion += 1
 
     finally:
         if conn:
             conn.close()
 
-    return procesado
-#Simular datos a traves de json
+    # <--- ¡MIRA AQUÍ! DEBE RETORNAR UN DICCIONARIO
+    return {
+        "message": "Proceso de simulación completado.",
+        "registros_insertados": registros_insertados,
+        "errores": errores_insercion
+    }
+
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, descripcion, proyecto_id FROM dispositivos WHERE id = %s", (dispositivo_id,))
+        return cursor.fetchone() # Asume que fetchone() devuelve un diccionario o None
+    except Exception as e:
+        print(f"Error al obtener dispositivo por ID: {e}")
+        return None
+    finally:
+        if conn:
+            conn.close()
 async def simular_datos_json(datos: DatosSimulacionJson) -> List[Dict[str, Any]]:
     procesado = []
     conn = None

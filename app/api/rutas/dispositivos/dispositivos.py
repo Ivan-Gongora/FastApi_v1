@@ -1,9 +1,9 @@
-from fastapi import Path
+from fastapi import Path # type: ignore
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Query, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Query, HTTPException # type: ignore
+from fastapi.responses import JSONResponse # type: ignore
 from datetime import datetime
-import pymysql
+import pymysql # type: ignore
 
 
 from app.configuracion import configuracion

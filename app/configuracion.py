@@ -1,24 +1,27 @@
-# app/configuracion.py
+# app/configuracion.py (CORREGIDO)
 
 import os
 
 class ConfiguracionSimulacion:
-    # Configuración de la base de datos MySQL (XAMPP)
-    db_host: str = "localhost" #si su xampp esta en windows y su entorno virtual en ubuntu , poner su ip de computadora
-                                  # y modificar el usuario root de phpmyadmin quitarle el "localhost y ponerle el " %" "
-                                  #si todo esta en windows, solo cambien esto por localhost
-    db_port: int = 3306
-    db_user: str = "root" # Usuario por defecto de XAMPP MySQL
-    db_password: str = "" # Contraseña por defecto de XAMPP MySQL (vacía por defecto en XAMPP)
-    db_name: str = "sistema_iot" # El nombre de tu base de datos
+    # --- Configuración de Base de Datos MySQL (XAMPP) ---
+    db_host: str = os.getenv("DB_HOST", "localhost")
+    db_port: int = int(os.getenv("DB_PORT", 3306))
+    db_user: str = os.getenv("DB_USER", "root")
+    db_password: str = os.getenv("DB_PASSWORD", "")
+    db_name: str = os.getenv("DB_NAME", "sistema_iot")
 
-    # Mapeo de nombres de CSV a IDs de campo en la DB.
-    # Estos IDs corresponden a los campos 'Temperatura' y 'Humedad'
-    # de tus sensores 'STM-01' y 'SHM-01' respectivamente.
-    # ¡Estos IDs SÍ DEBES OBTENERLOS y ponerlos aquí!
-    campo_temperatura_id: int = 2 # Ejemplo: 1
-    campo_humedad_id: int = 3 # Ejemplo: 4
+    campo_temperatura_id: int = 2
+    campo_humedad_id: int = 3
+
+    # --- Configuración para envío de correos ---
+    # ¡NOMBRES DE ATRIBUTOS CAMBIADOS A MAYÚSCULAS AQUÍ!
+    EMAIL_SMTP_SERVER: str = os.getenv("EMAIL_SMTP_SERVER", "smtp.gmail.com")
+    EMAIL_SMTP_PORT: int = int(os.getenv("EMAIL_SMTP_PORT", 587))
+    
+    EMAIL_REMITENTE: str = os.getenv("EMAIL_REMITENTE_CORREO") # <-- ¡Cambio aquí!
+    EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD")         # <-- ¡Cambio aquí!
+    
+    EMAIL_DESTINATARIO_ALERTA: str = os.getenv("EMAIL_DESTINATARIO_ALERTA", "ivangongora1092@gmail.com")
 
 
-# Instancia de configuración
 configuracion = ConfiguracionSimulacion()
