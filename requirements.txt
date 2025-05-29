@@ -1,3 +1,2 @@
  pip install fastapi uvicorn pymysql python-multipart
 
-pip install python-dotenv
