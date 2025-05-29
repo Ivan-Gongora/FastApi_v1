@@ -17,6 +17,9 @@ from app.servicios.endpoints import router as valores_router
 from app.api.rutas.proyectos.proyectos import router_proyecto as router_proyecto
 from app.api.rutas.dispositivos.dispositivos import router_dispositivo as router_dispositivo
 from app.api.rutas.simulacion import router as simulacion_router # Importa el router
+from app.api.rutas.sensores.sensores import router_sensor as router_sensor
+from app.api.rutas.usuarios.usuarios import router_usuario as router_usuario
+
 aplicacion = FastAPI()
 
 origins = [
@@ -41,10 +44,15 @@ aplicacion.mount("/web", StaticFiles(directory="web"), name="web")
 aplicacion.include_router(valores_router)
 aplicacion.include_router(router_proyecto)
 aplicacion.include_router(router_dispositivo)
+aplicacion.include_router(router_sensor)
+aplicacion.include_router(router_usuario)
+
 
 aplicacion.include_router(router_proyecto, prefix="/api") # Asegúrate del prefijo /api aquí
 aplicacion.include_router(router_dispositivo, prefix="/api") # Asegúrate del prefijo /api aquí
 aplicacion.include_router(simulacion_router, prefix="/api") # Inclúyelo
+aplicacion.include_router(router_sensor, prefix="/api")
+aplicacion.include_router(router_usuario, prefix="/api")
 
 
 @aplicacion.get("/", response_class=HTMLResponse)
