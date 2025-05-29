@@ -34,25 +34,30 @@
           <h2 class="mb-3 text-center">Inicio de Sesión</h2>
           <div class="mb-3">
             <label for="usuario" class="form-label">Usuario:</label>
-            <input type="text" class="form-control" id="usuario" v-model="usuario">
+            <input type="text" class="form-control" id="usuario" v-model="usuario" required>
           </div>
           <div class="mb-3">
             <label for="contrasena" class="form-label">Contraseña:</label>
-            <input type="password" class="form-control" id="contrasena" v-model="contrasena">
+            <input type="password" class="form-control" id="contrasena" v-model="contrasena" rrequired>
           </div>
           <div class="d-grid">
-            <router-link to="/plataforma" class="nav-link btn btn-success ms-2">
-       <button class="btn btn-primary" type="button">Iniciar sesión</button></router-link>
+            <button class="btn btn-primary" @click="iniciarSesion">Iniciar sesión</button>
+          </div>
+          <div v-if="error" class="mt-3 text-danger text-center">
+            {{ error }}
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 <script>
 import imagenAnalisis1 from '@/assets/inicio/analisis.png';
 import imagenEstadistica1 from '@/assets/inicio/estadistica.jpg';
-import imagenGrafica1 from '@/assets/inicio/grafico-diagramas.jpg'; // Asegúrate de usar el nombre de archivo correcto
+import imagenGrafica1 from '@/assets/inicio/grafico-diagramas.jpg';
+
+const API_BASE_URL = 'http://127.0.0.1:8001';
 
 export default {
   name: 'SeccionPrincipal',
@@ -62,16 +67,53 @@ export default {
       imagenEstadistica: imagenEstadistica1,
       imagenAnalisis: imagenAnalisis1,
       usuario: '',
-      contrasena: ''
+      contrasena: '',
+      error: ''
     };
+  },
+  methods: {
+    async iniciarSesion() {
+
+    if (!this.usuario || !this.contrasena) {
+    this.error = 'Por favor ingresa el usuario y la contraseña';
+    return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            nombre_usuario: this.usuario,
+            contrasena: this.contrasena
+          })
+        });
+
+        const resultado = await response.json();
+        // Se espesifica el error ocurrido
+        if (!response.ok) {
+          this.error = resultado.detail || 'Error al iniciar sesión';
+          return;
+        }
+
+        // Guardar datos del usuario si es necesario
+        localStorage.setItem('usuario', JSON.stringify(resultado.usuario));
+
+        // Redirigir a plataforma principal
+        this.$router.push('/plataforma');
+      } catch (error) {
+        this.error = 'Error de conexión con el servidor';
+      }
+    }
   }
-}
+};
 </script>
 
 <style scoped>
-/* Ajusta el ancho del carrusel si es necesario */
 .carousel {
   max-width: 400px;
-  margin: 0 auto; /* Centrar el carrusel */
+  margin: 0 auto;
 }
 </style>
