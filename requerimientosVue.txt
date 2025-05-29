@@ -1,0 +1,14 @@
+para crear el proyecto en ubuntu con vue cliente
+vue create frontend-vue
+
+para instalar el bootstrap
+npm install bootstrap @popperjs/core
+
+Instala sass-loader y sass
+npm install --save-dev sass-loader sass
+
+Vue Router para gestionar la navegación entre las diferentes vistas de tu aplicación.
+npm install vue-router@4
+
+para correr el vue
+npm run serve
