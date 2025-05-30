@@ -15,7 +15,7 @@ from app.servicios import simulacion as servicio_simulacion
 router_dispositivo = APIRouter()
 
 # Crear Proyectos 
-@router_dispositivo.post("/crear_dispositivo/")
+@router_dispositivo.post("/dispositivos/")
 async def crear_Dispositivo(datos: DispositivoCrear):
     try:
         print(f"Nombre del dispositivo: {datos.nombre}")

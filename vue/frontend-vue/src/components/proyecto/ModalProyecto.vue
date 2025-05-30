@@ -1,5 +1,5 @@
 <template>
-    <div class="modal">Modal Proyecto (pendiente de implementar)</div>
+    <div class="modal visible">Modal Proyecto (pendiente de implementar)</div>
   </template>
   
   <script>

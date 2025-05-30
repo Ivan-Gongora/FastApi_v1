@@ -22,7 +22,7 @@
           </thead>
           <tbody>
             <tr v-for="(disp) in dispositivos" :key="disp.id">
-              <td>{{ disp.id }}</td>,
+              <td>{{ disp.id }}</td>
               <td>{{ disp.nombre }}</td>
               <td>{{ disp.descripcion }}</td>
               <td>{{disp.tipo}}</td>
@@ -72,7 +72,7 @@
 import { ref, onMounted } from "vue";
 import BarraLateralPlataforma from "../plataforma/BarraLateralPlataforma.vue";
 import EncabezadoPlataforma from "../plataforma/EncabezadoPlataforma.vue";
-import CrearDispositivo from "./CrearDispositivo.vue";
+import CrearDispositivo from "../dispositivos/CrearDispositivo.vue";
 import ModalEliminar from "../dispositivos/ModalEliminar.vue";
 
 export default {
@@ -94,7 +94,7 @@ export default {
     // Cargar dispositivos (GET)
     const cargarDispositivos = async () => {
   try {
-    const res = await fetch(`${API_BASE_URL}/dispositivos/`);
+    const res = await fetch(`${API_BASE_URL}/dispositivos`);
     if (!res.ok) throw new Error(`Error: ${res.status}`);
     const data = await res.json();
     dispositivos.value = data.map(d => ({
@@ -113,23 +113,10 @@ export default {
   }
 };
 
-
-    // Crear dispositivo (POST)
-    const crearDispositivo = async (nuevoDisp) => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/dispositivos/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(nuevoDisp),
-        });
-        if (!res.ok) throw new Error(`Error: ${res.status}`);
-        const creado = await res.json();
-        dispositivos.value.push(creado);
-        cerrarModalCrear();
-      } catch (error) {
-        alert("Error creando dispositivo: " + error.message);
-      }
-    };
+const crearDispositivo = (nuevoDispositivo) => {
+  dispositivos.value.push(nuevoDispositivo); // Puedes hacer una petición POST aquí también
+  cerrarModalCrear();
+};
 
     // Eliminar dispositivo (DELETE)
     const eliminarDispositivo = async (id) => {
