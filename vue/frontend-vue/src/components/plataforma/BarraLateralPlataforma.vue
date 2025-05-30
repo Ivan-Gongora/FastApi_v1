@@ -24,10 +24,13 @@
         </li>
       </ul>
     </div>
-    <div class="configuracion mt-auto text-center">
+     <div class="configuracion mt-auto text-center">
       <hr class="my-2">
       <router-link to="/settings" class="nav-link text-light">
         <i class="bi bi-gear-fill me-2"></i> Configuración
+      </router-link>
+      <router-link to="/" class="nav-link text-light">
+        <i class="bi bi-gear-fill me-2"></i> Cerrar sesión
       </router-link>
     </div>
   </div>
