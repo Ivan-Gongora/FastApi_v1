@@ -98,8 +98,8 @@ export default {
           return;
         }
 
-        // Guardar datos del usuario si es necesario
-        localStorage.setItem('usuario', JSON.stringify(resultado.usuario));
+        // Guardar datos del usuario  en formato json
+        localStorage.setItem('resultado', JSON.stringify(resultado));
 
         // Redirigir a plataforma principal
         this.$router.push('/plataforma');
