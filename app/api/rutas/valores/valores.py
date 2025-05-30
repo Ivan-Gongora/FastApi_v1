@@ -1,4 +1,4 @@
-from fastapi import Path
+from fastapi import Path, Body
 from fastapi import APIRouter, Query, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Optional, List, Dict
@@ -9,6 +9,7 @@ from app.configuracion import configuracion
 from app.servicios.servicio_simulacion import get_db_connection, simular_datos_json
 from app.api.modelos.simulacionJson import DatosSimulacionJson
 
+from app.api.modelos.valores import Valor, ValorCrear, ValorActualizar
 
 from app.api.modelos.simulacion import DatosSimulacion
 
@@ -85,6 +86,72 @@ async def eliminar_valores(
 
     except pymysql.MySQLError as e:
         raise HTTPException(status_code=500, detail=f"Error al eliminar datos: {str(e)}")
+    finally:
+        conn.close()
+
+@router.post("/valores/")
+async def crear_valor(valor: ValorCrear = Body(...)) -> Dict:
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = """
+            INSERT INTO valores (valor, fecha_hora_lectura, campo_id)
+            VALUES (%s, %s, %s)
+        """
+        params = (valor.valor, valor.fecha_hora_lectura, valor.campo_id)
+
+        cursor.execute(query, params)
+        conn.commit()
+
+        return {
+            "message": "Valor insertado correctamente",
+            "id_generado": cursor.lastrowid
+        }
+
+    except pymysql.MySQLError as e:
+        raise HTTPException(status_code=500, detail=f"Error al insertar valor: {str(e)}")
+    finally:
+        conn.close()
+
+@router.put("/valores/")
+async def actualizar_valor(
+    id: int = Query(..., description="ID del valor a actualizar"),
+    valor: ValorActualizar = Body(...)
+) -> Dict:
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        campos = []
+        params = []
+
+        if valor.campo_id is not None:
+            campos.append("campo_id = %s")
+            params.append(valor.campo_id)
+        if valor.valor is not None:
+            campos.append("valor = %s")
+            params.append(valor.valor)
+        if valor.fecha_hora_lectura is not None:
+            campos.append("fecha_hora_lectura = %s")
+            params.append(valor.fecha_hora_lectura)
+
+        if not campos:
+            raise HTTPException(status_code=400, detail="No se proporcionaron campos para actualizar")
+
+        query = f"UPDATE valores SET {', '.join(campos)} WHERE id = %s"
+        params.append(id)
+
+        resultado = cursor.execute(query, params)
+        conn.commit()
+
+        if resultado == 0:
+            raise HTTPException(status_code=404, detail=f"No se encontró valor con id {id}")
+
+        return {"message": f"Valor con id {id} actualizado correctamente"}
+
+    except pymysql.MySQLError as e:
+        raise HTTPException(status_code=500, detail=f"Error al actualizar valor: {str(e)}")
     finally:
         conn.close()
 

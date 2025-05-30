@@ -10,7 +10,7 @@
   
   <script>
   import BarraLateralPlataforma from '../plataforma/BarraLateralPlataforma.vue';
-  import EncabezadoPlataforma from '../plataforma/EncabezadoPlataforma.vue';
+//import EncabezadoPlataforma from '../plataforma/EncabezadoPlataforma.vue';
   import ListaDispositivos from '../dispositivos/Dispositivos.vue';
   
   export default {
@@ -18,7 +18,7 @@
     name: 'VistaDispositivos',
     components: {
       BarraLateralPlataforma,
-      EncabezadoPlataforma,
+      //EncabezadoPlataforma,
       ListaDispositivos
     },
   };

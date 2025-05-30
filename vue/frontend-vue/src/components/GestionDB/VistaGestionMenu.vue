@@ -31,7 +31,7 @@
                 <i class="bi bi-file-earmark-spreadsheet-fill text-secondary mb-3" style="font-size: 2em;"></i>
                 <h5 class="card-title">Valores</h5>
                 <p class="card-text small text-muted">Envía datos de sensores desde un archivo CSV.</p>
-                <router-link to="/" class="btn btn-secondary btn-sm">Subir archivo CSV</router-link>
+                <router-link to="/vista_valores" class="btn btn-secondary btn-sm">Subir archivo CSV</router-link>
               </div>
             </div>
           </div>

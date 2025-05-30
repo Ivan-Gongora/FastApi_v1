@@ -17,7 +17,7 @@ from app.servicios import servicio_simulacion as servicio_simulacion
 router_proyecto = APIRouter()
 
 
-@router_proyecto.get("/proyectos", response_model=List[Proyecto])
+@router_proyecto.get("/proyectos/", response_model=List[Proyecto])
 async def get_proyectos():
     proyectos = await servicio_simulacion.obtener_proyectos()
     return proyectos
@@ -79,8 +79,8 @@ async def obtener_proyecto_por_id(id: int):
 
 
 # Actualizar información de proyectos
-@router_proyecto.put("/actualizar_proyecto/{id}")
-async def actualizar_datos_proyecto(id,datos: ProyectoActualizar):
+@router_proyecto.put("/proyectos/{id}")
+async def endpoint_actualizar_datos_proyecto(id: int, datos: ProyectoActualizar):
     
     try:
         print(f"id proyecto: {id}")
@@ -103,7 +103,7 @@ async def actualizar_datos_proyecto(id,datos: ProyectoActualizar):
         )
 
 # Eliminar proyecto por id en espesifico o todos los proyectos pertenecientes al usuario
-@router_proyecto.delete("/eliminar_proyecto/")
+@router_proyecto.delete("/proyectos/")
 async def eliminar_proyecto(
     id: Optional[int] = Query(None, description="Eliminar por ID"),
     usuario_id: int = Query(..., description="ID del usuario") 

@@ -199,7 +199,7 @@ async def eliminar_sensor(
             conn.close()
         
 # Obtener los sensores por el dispositivo al que pertenece o la lista completa 
-@router_sensor.get("/obtener_sensores/", response_model=List[Sensor])
+@router_sensor.get("/sensores/", response_model=List[Sensor])
 async def obtener_sensores(
     id: Optional[int] = Query(None, description="ID del sensor específico"),
     dispositivo_id: Optional[int] = Query(None, description="ID del dispositivo para filtrar sensores")

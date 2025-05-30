@@ -6,9 +6,13 @@ import VistaPlataformaPrincipal from '../components/plataforma/VistaPlataformaPr
 import VistaDispositivos from '../components/dispositivos/VistaDispositivos.vue'; 
 import DetalleDispositivo from '../components/dispositivos/DetalleDispositivo.vue';
 import VistaMisProyectos from '../components/proyecto/VistaMisProyectos.vue';
+import DetalleProyecto from '../components/proyecto/DetalleProyecto.vue'
 import MenuSimulacion from '../components/simulador/VistaSimulacionMenu.vue';
 import VistaC from '../components/simulador/csvEnviar.vue';
 import MenuGestion from '../components/GestionDB/VistaGestionMenu.vue'
+
+import VerValores from '../components/valores/VerValores.vue';
+import updateValores from '../components/valores/updateValores.vue';
 const routes = [
   {
     path: '/',
@@ -31,12 +35,18 @@ const routes = [
     component: VistaMisProyectos
   },
   {
+    path: '/detalle-proyecto/:id',
+    name: 'DetalleProyecto',
+    component: DetalleProyecto
+  },
+
+  {
     path: '/dispositivos',
     name: 'VistaDispositivos',
     component: VistaDispositivos
   },
   {
-    path: '/detalle-dispositivo',
+    path: '/detalle-dispositivo/:id',
     name: 'DetalleDispositivo',
     component: DetalleDispositivo
   },
@@ -54,6 +64,18 @@ const routes = [
     path: '/menu-gestion',
     name: 'MenuGestion',
     component: MenuGestion
+  },
+
+  {
+    path: '/vista_valores',
+    name: 'VerValores',
+    component: VerValores
+  },
+
+  {
+    path: '/actualizar_valores',
+    name: 'updateValores',
+    component: updateValores
   },
 
 ];

@@ -13,7 +13,7 @@ from fastapi import FastAPI, UploadFile, File, Form # type: ignore
 
 from app.configuracion import configuracion
 
-from app.servicios.endpoints import router as valores_router
+from app.api.rutas.valores.valores import router as valores_router
 from app.api.rutas.proyectos.proyectos import router_proyecto as router_proyecto
 from app.api.rutas.dispositivos.dispositivos import router_dispositivo as router_dispositivo
 from app.api.rutas.simulacion import router as simulacion_router # Importa el router
