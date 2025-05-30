@@ -10,5 +10,7 @@ npm install --save-dev sass-loader sass
 Vue Router para gestionar la navegación entre las diferentes vistas de tu aplicación.
 npm install vue-router@4
 
+
+
 para correr el vue
 npm run serve
