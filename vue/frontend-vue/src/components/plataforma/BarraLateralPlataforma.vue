@@ -7,7 +7,7 @@
     <div class="usuario-info mb-4 text-center">
       <img src="@/assets/dashboard/usuario.webp" alt="Avatar" class="rounded-circle mb-2" style="width: 80px; height: 80px; object-fit: cover;">
       <p class="mb-1">¡Bienvenido!</p>
-      <p class="mb-0 font-weight-bold">Ivan</p>
+      <p class="mb-0 font-weight-bold">{{ nombre + ' ' + apellido}}</p>
     </div>
     <div class="menu">
       <h5 class="mb-3">Menú</h5>
@@ -36,6 +36,26 @@
 <script>
 export default {
   name: 'BarraLateralPlataforma',
+  data() {
+    return {
+      tipo_suario: '',
+      nombre: '',
+      apellido: '',
+      id_usuario: null,
+      error: ''
+      };
+    },mounted() {
+      // Se recuperan los datos obtenidos del localStorage del usuario
+    const resultado = JSON.parse(localStorage.getItem('resultado'));
+
+    if (resultado && resultado.usuario) {
+      this.id_usuario = resultado.usuario.id;
+      this.nombre = resultado.usuario.nombre;
+      this.apellido = resultado.usuario.apellido;
+      this.tipo_suario = resultado.usuario.tipo_usuario;
+
+    }
+  },
   methods: {
     redirigirAPlataforma() {
       this.$router.push('/plataforma');
