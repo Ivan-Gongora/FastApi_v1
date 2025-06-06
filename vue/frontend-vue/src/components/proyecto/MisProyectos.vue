@@ -1,145 +1,183 @@
 <template>
   <div>
-    <ModalProyecto
-      v-if="mostrarModal"
-      @cerrar="mostrarModal = false"
-      @crear="crearProyecto"
-    />
-
     <div v-if="proyectos.length">
       <table class="tabla">
         <thead>
           <tr>
             <th>Nombre</th>
             <th>Descripción</th>
-            <th>Dispositivos</th>
-            <th>Sensores</th>
+            
+            <div v-if="tipo_usuario === 'admin'">
             <th colspan="2">Opciones</th>
+            </div>
           </tr>
         </thead>
         <tbody>
           <tr v-for="proyecto in proyectos" :key="proyecto.id">
             <td>{{ proyecto.nombre }}</td>
             <td>{{ truncarDescripcion(proyecto.descripcion) }}</td>
-            <td>{{ proyecto.dispositivos ?? 0 }}</td>
-            <td>{{ proyecto.sensores ?? 0 }}</td>
+            <div v-if="tipo_usuario === 'admin'">
             <td class="opciones">
-              <router-link :to="`/detalle-proyecto/${proyecto.id}`">
-                <span class="ion-eye"></span>
-              </router-link>
+            <!-- Mostrar solo si el usuario es admin -->
+          
+                <router-link :to="`/detalle-proyecto/${proyecto.id}`">
+                  <span class="ion-eye"></span>
+                </router-link>
+
+
             </td>
             <td class="opciones">
-              <a @click="confirmarEliminacion(proyecto.id)">
+              <a @click="confirmarEliminacion(proyecto.id,this.id_usuario )">
                 <span class="ion-trash-a"></span>
               </a>
             </td>
+
+          </div>
           </tr>
         </tbody>
       </table>
     </div>
     <div v-else>
-      <h2 class="margen">Aún no cuentas con Proyectos...</h2>
+      <h2 class="margen">Aún no cuentas con Proyectos..</h2>
     </div>
 
-    <div class="centrado">
-      <input @click="mostrarModal = true" class="btn btn-info" type="button" value="Nuevo Proyecto" style="color: white;">
-    </div>
+  <!-- Botón solo visible para admins -->
+  <div v-if="tipo_usuario === 'admin'" class="centrado">
+    <input
+      @click="mostrarModalCrear = true"
+      class="btn btn-info"
+      type="button"
+      value="Nuevo Proyecto"
+      style="color: white;"
+    >
+  </div>
 
+
+    <!-- Modales -->
     <ModalEliminarProyecto
       :class="{ modal: true, advertencia: true, visible: mostrarModalEliminar }"
       @cancelar="cerrarModalEliminar"
-      @confirmar="eliminar"
+      @confirmar="eliminar(proyectoEliminarId, usuarioId)"
+    />
+
+    <ModalProyecto  
+      v-if="mostrarModalCrear"
+      @crear="crearProyecto"
+      @cerrar="cerrarModalCrear"
+      :class="{ visible: mostrarModalCrear }"
     />
   </div>
 </template>
 
 <script>
-import ModalProyecto from './ModalProyecto.vue';
+import ModalProyecto from './CrearProyecto.vue';
 import ModalEliminarProyecto from './ModalEliminar.vue';
 
-const API_BASE_URL = 'http://localhost:8001'; // Asegúrate de apuntar a tu backend
+const API_BASE_URL = 'http://127.0.0.1:8001';
 
 export default {
   name: 'MisProyectos',
-
   components: {
     ModalProyecto,
     ModalEliminarProyecto
   },
-
   data() {
     return {
       proyectos: [],
       mostrarModal: false,
       mostrarModalEliminar: false,
       proyectoEliminarId: null,
+      mostrarModalCrear: false,
+      id_usuario: null,
+      usuarioId: null,
+      tipo_usuario: null,
+      error: '',
+      resultado: null // Guardamos el resultado globalmente para acceso en el template
     };
   },
-
   methods: {
-    truncarDescripcion(desc) {
-      return desc.split(' ').slice(0, 10).join(' ') + '...';
+    truncarDescripcion(descripcion) {
+      if (!descripcion || typeof descripcion !== 'string') {
+        return 'Sin descripción';
+      }
+      return descripcion.split(' ').slice(0, 10).join(' ') + '...';
     },
-
-    confirmarEliminacion(id) {
+    confirmarEliminacion(id, id_usuario) {
       this.proyectoEliminarId = id;
+      this.usuarioId = id_usuario;
       this.mostrarModalEliminar = true;
-    },
 
+
+
+
+    },
     cerrarModalEliminar() {
       this.mostrarModalEliminar = false;
       this.proyectoEliminarId = null;
     },
+    eliminar(id, usuarioId) {
+      fetch(`${API_BASE_URL}/eliminar_proyecto?id=${id}&usuarioId=${usuarioId}`, {
+        method: 'DELETE',
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Error al eliminar el proyecto.');
+          }
+          return response.text();
+        })
+        .then(msg => {
+          alert(msg);
 
-    async eliminar() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/proyectos/${this.proyectoEliminarId}`, {
-          method: 'DELETE',
+          // Elimina el proyecto del array local sin recargar la página
+          this.proyectos = this.proyectos.filter(p => p.id !== id);
+
+          this.cerrarModalEliminar();
+        })
+        .catch(err => {
+          alert('Error: ' + err.message);
+          this.cerrarModalEliminar();
         });
-
-        if (!res.ok) throw new Error('Error al eliminar el proyecto');
-
-        this.proyectos = this.proyectos.filter(p => p.id !== this.proyectoEliminarId);
-        this.mostrarModalEliminar = false;
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
     },
-
-    async crearProyecto(nuevoProyecto) {
-      try {
-        const res = await fetch(`${API_BASE_URL}/proyectos/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(nuevoProyecto),
-        });
-
-        if (!res.ok) throw new Error('Error al crear el proyecto');
-
-        const proyectoCreado = await res.json();
-        this.proyectos.push(proyectoCreado);
-        this.mostrarModal = false;
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
+    crearProyecto(proyecto) {
+      this.proyectos.push(proyecto); // Simulación local
+      this.mostrarModalCrear = false;
     },
-
-    async cargarProyectos() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/proyectos/`);
-        if (!res.ok) throw new Error('Error al cargar los proyectos');
-
-        this.proyectos = await res.json();
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
+    cerrarModalCrear() {
+      this.mostrarModalCrear = false;
     }
   },
-
   mounted() {
-    this.cargarProyectos();
+    const resultado = JSON.parse(localStorage.getItem('resultado'));
+
+    if (resultado && resultado.usuario) {
+      this.resultado = resultado; 
+      this.id_usuario = resultado.usuario.id;
+      this.tipo_usuario = resultado.usuario.tipo_usuario;
+
+      if (this.tipo_usuario === 'admin') {
+        // Admin ve todos los proyectos
+        fetch(`${API_BASE_URL}/proyectos`)
+          .then(res => res.json())
+          .then(data => {
+            this.proyectos = data;
+          })
+          .catch(error => {
+            console.error('Error al obtener proyectos:', error);
+          });
+      } else {
+        // Usuario común: solo sus proyectos
+        fetch(`${API_BASE_URL}/proyectos/usuario/${this.id_usuario}`)
+          .then(res => res.json())
+          .then(data => {
+            this.proyectos = data;
+          })
+          .catch(error => {
+            console.error('Error al obtener proyectos:', error);
+          });
+      }
+    } else {
+      console.error('No se encontró información del usuario en localStorage.');
+    }
   }
 };
 </script>
